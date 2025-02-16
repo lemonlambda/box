@@ -42,33 +42,33 @@ async def thread_it(func, *args, **kwargs):
 
 
 # A helper class for working with messages of indeterminate length
-# class LongMessage(obj):
-#     def __init__(self, context):
-#         self.context = context
+class LongMessage(object):
+    def __init__(self, context):
+        self.context = context
 
-#     async def __respond(self, func, content = None, **kwargs):
-#         if content == None:
-#             return
+    async def __respond(self, func, content = None, **kwargs):
+        if content == None:
+            return
         
-#         chunk_size = 2000
-#         """Splits a long message into chunks and sends them, avoiding word cuts if possible."""
-#         while len(content) > chunk_size:
-#             split_index = content.rfind(" ", 0, chunk_size)  # Find the last space before limit
-#             if split_index == -1:
-#                 split_index = chunk_size  # If no space is found, split at exact limit
-#             await func(content[:split_index], kwargs)
-#             content = content[split_index:].lstrip()  # Remove leading spaces in the next chunk
-#         await func(content, kwargs)  # Send the remaining part
+        chunk_size = 2000
+        """Splits a long message into chunks and sends them, avoiding word cuts if possible."""
+        while len(content) > chunk_size:
+            split_index = content.rfind(" ", 0, chunk_size)  # Find the last space before limit
+            if split_index == -1:
+                split_index = chunk_size  # If no space is found, split at exact limit
+            await func(content[:split_index], kwargs)
+            content = content[split_index:].lstrip()  # Remove leading spaces in the next chunk
+        await func(content, kwargs)  # Send the remaining part
 
-#     async def reply(self, content = None, **kwargs):
-#         await self.__respond(self.context.reply, content, kwargs)
+    async def reply(self, content = None, **kwargs):
+        await self.__respond(self.context.reply, content, kwargs)
 
-#     async def send(self, content = None, **kwargs):
-#         await self.__respond(self.context.send, content, kwargs)
+    async def send(self, content = None, **kwargs):
+        await self.__respond(self.context.send, content, kwargs)
         
 
-#     def __enter__(self):
-#         return self
+    def __enter__(self):
+        return self
 
-#     def __exit__(self):
-#         pass
+    def __exit__(self):
+        pass
