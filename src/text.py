@@ -30,11 +30,15 @@ class Text:
         except Exception as e:
             fawait(result_queue.put(str(e)))
 
+    async def get_response(self):
+        reply = await thread_it(Text.model_chat, self)
+        return reply
+
     # A function to reply to a given Discord.py Context
     async def reply_to_context(self, context, dry_run_message = "This is a dry run message"):
         if not self.options.dry_run:
             async with context.channel.typing():
-                reply = await thread_it(model_chat(self))
+                reply = await self.get_response()
 
                 with LongMessage(context) as context:
                     await context.reply(reply)

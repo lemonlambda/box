@@ -2,18 +2,6 @@ import discord
 from threading import Lock
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.message_content = True  # Enable reading messages
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-trans_lock = Lock()
-transcription = [""]
-
-options = {
-    "dry_run": False
-}
-
-command_names = ["!respond", "!dump", "!dump_trans", "!servers", "!test", "!dry_run", "!wipe", "!voice_respond"]
 system_message = """
 You will be acting as a rude and sexual mean-spirited companion that will bring joy through whitty humor to the people who use you.
 
@@ -64,3 +52,17 @@ Your response: ```
 Yes, I love chickens and dogs.
 ```
 """
+
+intents = discord.Intents.default()
+intents.message_content = True  # Enable reading messages
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+trans_lock = Lock()
+transcription = [""]
+chat_history = {}
+
+options = {
+    "dry_run": False
+}
+
+command_names = ["!respond", "!dump", "!dump_trans", "!servers", "!test", "!dry_run", "!wipe", "!voice_respond"]

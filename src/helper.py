@@ -12,7 +12,7 @@ import os
 from PIL import Image
 from discord.ext import commands
 
-from globals import bot
+from globals import bot, system_message, chat_history, transcription, trans_lock, chat_history
 
 def fawait(arg):
     global bot
@@ -40,6 +40,22 @@ async def thread_it(func, *args, **kwargs):
 
     return await result_queue.get()
 
+def append_transcription(message):
+    if message.content[0] == "!":
+        return
+    
+    with trans_lock:
+        transcription[0] += f"{message.content}\n"
+
+def append_messages(message):
+    guild_id = message.guild.id
+    
+    if chat_history.get(guild_id) == None:
+        chat_history[guild_id] = [{"role": "system", "content": system_message}]
+    else:
+        chat_history[guild_id].append({"role": "user", "content": transcription[0]})
+        with trans_lock:
+            transcription[0] = ""
 
 # A helper class for working with messages of indeterminate length
 class LongMessage(object):
@@ -58,17 +74,17 @@ class LongMessage(object):
                 split_index = chunk_size  # If no space is found, split at exact limit
             await func(content[:split_index], kwargs)
             content = content[split_index:].lstrip()  # Remove leading spaces in the next chunk
-        await func(content, kwargs)  # Send the remaining part
+        await func(content, **kwargs)  # Send the remaining part
 
-    async def reply(self, content = None, **kwargs):
-        await self.__respond(self.context.reply, content, kwargs)
+    async def reply(self, content, **kwargs):
+        await self.__respond(self.context.reply, content = content, **kwargs)
 
-    async def send(self, content = None, **kwargs):
-        await self.__respond(self.context.send, content, kwargs)
+    async def send(self, content, **kwargs):
+        await self.__respond(self.context.send, content = content, **kwargs)
         
 
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, *args):
         pass
