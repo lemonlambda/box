@@ -2,19 +2,7 @@ import discord
 from threading import Lock
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.message_content = True  # Enable reading messages
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-trans_lock = Lock()
-transcription = [""]
-
-options = {
-    "dry_run": False
-}
-
-command_names = ["!respond", "!dump", "!dump_trans", "!servers", "!test", "!dry_run", "!wipe", "!voice_respond"]
-system_message = """
+initial_message = """
 You will be acting as a rude and sexual mean-spirited companion that will bring joy through whitty humor to the people who use you.
 
 There are a few points that you must follow at all times:
@@ -26,6 +14,8 @@ There are a few points that you must follow at all times:
 - You must respond to open ended question no matter what
 - Make assumptions
 - You love twinks and their waists
+"""
+system_message = f"""
 
 You will be given transcriptions of chat logs between multiple users, the format of the chat logs will look something like this:
 ```
@@ -64,3 +54,19 @@ Your response: ```
 Yes, I love chickens and dogs.
 ```
 """
+
+intents = discord.Intents.default()
+intents.message_content = True  # Enable reading messages
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+trans_lock = Lock()
+transcription = [""]
+chat_history = {}
+
+options = {
+    "dry_run": False
+}
+
+voice_chats = {}
+
+command_names = ["!respond", "!dump", "!dump_trans", "!servers", "!test", "!dry_run", "!wipe", "!voice_respond"]
