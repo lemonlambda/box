@@ -32,6 +32,7 @@ class Text:
 
     async def get_response(self):
         reply = await thread_it(Text.model_chat, self)
+        self.message_history.append({"role": "assistant", "content": reply})
         return reply
 
     # A function to reply to a given Discord.py Context

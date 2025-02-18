@@ -5,16 +5,17 @@ import re
 import discord
 from pydub import AudioSegment
 
-from globals import trans_lock, transcription
+from text import Text
 from options import options
-from helper import thread_it
+from helper import LongMessage
 
 voices = {
     "us_female": "en-US-JennyNeural",
     "au_female": "en-AU-NatashaNeural",
     "us_male": "en-US-GuyNeural",
     "us_male_sigma": "en-US-AndrewMultilingualNeural",
-    "au_male": "en-AU-WilliamNeural"
+    "au_male": "en-AU-WilliamNeural",
+    "ph_male": "en-PH-JamesNeural"
 }
 
 # Default voice index
@@ -38,7 +39,8 @@ voice_changes = {
     "<usfemale>": "us_female",
     "<aufemale>": "au_female",
     "<usmale>": "us_male",
-    "<aumale>": "au_male"
+    "<aumale>": "au_male",
+    "<bot>": "ph_male"
 }
 
 sound_effect_description = """
@@ -86,8 +88,8 @@ class Voice:
         message_history.append({"role": "system", "content": sound_effect_description})
         self.text = Text(message_history = message_history, current_options = options)
 
-    async def __text_to_audio(contents, guild_id):
-        parts = re.split(r"(<.*?>)", message)  # Split text while keeping tags
+    async def text_to_audio(self, contents, guild_id):
+        parts = re.split(r"(<.*?>)", contents)  # Split text while keeping tags
         final_audio = AudioSegment.silent(duration=0)  # Start with silence
         
         tts_file_mp3 = f"tts_output_{guild_id}.mp3"
@@ -104,6 +106,7 @@ class Voice:
                 final_audio += effect_audio + AudioSegment.silent(duration=300)  # Small gap after SFX
             elif part in voice_changes:
                 current_voice = voices[voice_changes[part]]
+                final_audio += AudioSegment.silent(duration=300)  # Small gap after SFX
             elif part.strip():  
                 # Generate TTS for spoken text
                 communicate = edge_tts.Communicate(part, current_voice, rate="+0%")
@@ -119,7 +122,7 @@ class Voice:
         # Save the final combined audio
         final_audio.export(final_output, format="wav")
 
-    async def play_audio(voice_client, name):
+    async def play_audio(self, voice_client, name):
         while not voice_client.is_connected():
             await asyncio.sleep(0.1)
         
@@ -128,18 +131,18 @@ class Voice:
 
         while voice_client.is_playing():
             await asyncio.sleep(0.1)
-        await voice_client.disconnect()
 
     async def reply_to_context(self, context, dry_run_message = "This is a dry run message."):
         if not context.author.voice and not context.author.voice.channel:
             return
         async with context.channel.typing():
-            reply = self.text.get_response()
-            self.__text_to_audio(reply, context.guild.id)
+            reply = await self.text.get_response()
+            await self.text_to_audio(reply, context.guild.id)
             
             if context.author.voice and context.author.voice.channel:
                 voice_client = await context.author.voice.channel.connect()
-                self.play_audio(f"final_output_{context.guild.id}.wav")
+                await self.play_audio(voice_client, f"final_output_{context.guild.id}.wav")
+                await voice_client.disconnect()
             else:
                 context.reply("It seems like you're not in a vc anymore, how shameful of you!")
                 with Longmessage(context) as context:

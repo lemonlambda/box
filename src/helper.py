@@ -40,7 +40,13 @@ async def thread_it(func, *args, **kwargs):
 
     return await result_queue.get()
 
+def nthread_it(func, *args, **kwargs):
+    loop = asyncio.get_running_loop()
+    asyncio.run_coroutine_threadsafe(func(*args, **kwargs), loop)
+    
 def append_transcription(message):
+    if message.content == "" or message.content == None:
+        return
     if message.content[0] == "!":
         return
     
@@ -52,10 +58,9 @@ def append_messages(message):
     
     if chat_history.get(guild_id) == None:
         chat_history[guild_id] = [{"role": "system", "content": system_message}]
-    else:
-        chat_history[guild_id].append({"role": "user", "content": transcription[0]})
-        with trans_lock:
-            transcription[0] = ""
+    chat_history[guild_id].append({"role": "user", "content": transcription[0]})
+    with trans_lock:
+        transcription[0] = ""
 
 # A helper class for working with messages of indeterminate length
 class LongMessage(object):

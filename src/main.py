@@ -7,13 +7,14 @@ import asyncio
 import random
 from discord.ext import commands
 
-from globals import bot, system_message, chat_history
+from globals import bot, system_message, chat_history, transcription, trans_lock, voice_chats
 from helper import append_messages, append_transcription
 from text import Text
 from options import options
 from image_recognition import analyze_image
 from voice_respond import Voice
-from secrets import token
+from secret import bot_token
+from vc import VoiceChat
 
 # Event: When bot is ready
 @bot.event
@@ -54,7 +55,7 @@ async def wipe(message):
     if message.author.id != 882576914643054624:
         return
 
-    chat_history = [{"role": "system", "content": system_message}]
+    chat_history[message.guild.id] = [{"role": "system", "content": system_message}]
 
     char = "a person who's gonna die"
     initial_prompt = f"""
@@ -81,7 +82,7 @@ ROLEPLAY RULES
 async def voice_respond(message):
     append_messages(message)
     voice = Voice(message_history = chat_history[message.guild.id])
-    await voice.respond_to_context(message)
+    await voice.reply_to_context(message)
 
 @bot.command()
 async def dump_trans(ctx):
@@ -97,6 +98,18 @@ async def dry_run(message):
 
     await message.reply(f"Dry run is now: {options.dry_run}")
 
+@bot.command()
+async def join(context):
+    voice_chats[context.guild.id] = VoiceChat(context)
+    await voice_chats[context.guild.id].join(context)
+
+@bot.command()
+async def leave(context):
+    try:
+        voice_chats[context.guild.id].leave()
+    except:
+        pass
+
 # Run the bot
-bot.run(token)
+bot.run(bot_token)
     
